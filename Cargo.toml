@@ -1,0 +1,7 @@
+[package]
+name = "compiler"
+version = "0.1.0"
+authors = ["Hannah McLaughlin <h@mcla.ug>"]
+edition = "2018"
+
+[dependencies]
