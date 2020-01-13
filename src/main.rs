@@ -223,3 +223,8 @@ fn match_token(token_str: &'static str) -> Token {
         "%:%:" => Token::Punctuator(Punctuator::HashHash),
     }
 }
+
+fn lex(program_str: &'static str) -> Vec<Token> {
+    // FSM through characters of program
+    return vec![match_token("}")];
+}
