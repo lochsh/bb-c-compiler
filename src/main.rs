@@ -105,50 +105,60 @@ enum PreprocessingToken {
 
 fn match_token(token_str: &'static str) -> Token {
     match token_str {
-        // Keywords
+        /*
+         * Keywords
+         */
+        // Storage class specifiers
         "auto" => Token::Keyword(Keyword::Auto),
+        "extern" => Token::Keyword(Keyword::Extern),
+        "register" => Token::Keyword(Keyword::Register),
+        "static" => Token::Keyword(Keyword::Static),
+        "typedef" => Token::Keyword(Keyword::Typedef),
+
+        // Type qualifiers
+        "const" => Token::Keyword(Keyword::Const),
+        "restrict" => Token::Keyword(Keyword::Restrict),
+        "volatile" => Token::Keyword(Keyword::Volatile),
+
+        // Control
         "break" => Token::Keyword(Keyword::Break),
         "case" => Token::Keyword(Keyword::Case),
-        "char" => Token::Keyword(Keyword::Char),
-
-        "const" => Token::Keyword(Keyword::Const),
         "continue" => Token::Keyword(Keyword::Continue),
         "default" => Token::Keyword(Keyword::Default),
         "do" => Token::Keyword(Keyword::Do),
-
-        "double" => Token::Keyword(Keyword::Double),
         "else" => Token::Keyword(Keyword::Else),
-        "enum" => Token::Keyword(Keyword::Enum),
-        "extern" => Token::Keyword(Keyword::Extern),
-
-        "float" => Token::Keyword(Keyword::Float),
         "for" => Token::Keyword(Keyword::For),
         "goto" => Token::Keyword(Keyword::Goto),
         "if" => Token::Keyword(Keyword::If),
+        "return" => Token::Keyword(Keyword::Return),
+        "switch" => Token::Keyword(Keyword::Switch),
+        "while" => Token::Keyword(Keyword::While),
 
-        "inline" => Token::Keyword(Keyword::Inline),
+        // Type specifiers
+        "char" => Token::Keyword(Keyword::Char),
+        "double" => Token::Keyword(Keyword::Double),
+        "float" => Token::Keyword(Keyword::Float),
         "int" => Token::Keyword(Keyword::Int),
         "long" => Token::Keyword(Keyword::Long),
-        "register" => Token::Keyword(Keyword::Register),
-
-        "restrict" => Token::Keyword(Keyword::Restrict),
-        "return" => Token::Keyword(Keyword::Return),
         "short" => Token::Keyword(Keyword::Short),
         "signed" => Token::Keyword(Keyword::Signed),
-
-        "sizeof" => Token::Keyword(Keyword::Sizeof),
-        "static" => Token::Keyword(Keyword::Static),
-        "struct" => Token::Keyword(Keyword::Struct),
-        "switch" => Token::Keyword(Keyword::Switch),
-
-        "typedef" => Token::Keyword(Keyword::Typedef),
-        "union" => Token::Keyword(Keyword::Union),
         "unsigned" => Token::Keyword(Keyword::Unsigned),
         "void" => Token::Keyword(Keyword::Void),
 
-        "volatile" => Token::Keyword(Keyword::Volatile),
-        "while" => Token::Keyword(Keyword::While),
+        // Struct, union, enumeration
+        "enum" => Token::Keyword(Keyword::Enum),
+        "struct" => Token::Keyword(Keyword::Struct),
+        "union" => Token::Keyword(Keyword::Union),
 
+        // Function specifiers
+        "inline" => Token::Keyword(Keyword::Inline),
+
+        // sizeof
+        "sizeof" => Token::Keyword(Keyword::Sizeof),
+
+        /*
+         * Punctuators
+         */
         "[" => Token::Punctuator(Punctuator::OpenSquare),
         "]" => Token::Punctuator(Punctuator::CloseSquare),
         "(" => Token::Punctuator(Punctuator::OpenParen),
@@ -178,6 +188,7 @@ fn match_token(token_str: &'static str) -> Token {
         ">=" => Token::Punctuator(Punctuator::GreaterEqual),
         "==" => Token::Punctuator(Punctuator::EqualEqual),
         "!=" => Token::Punctuator(Punctuator::ExclamationEqual),
+
         "^" => Token::Punctuator(Punctuator::Caret),
         "|" => Token::Punctuator(Punctuator::Pipe),
         "&&" => Token::Punctuator(Punctuator::AmpAmp),
@@ -186,6 +197,7 @@ fn match_token(token_str: &'static str) -> Token {
         ":" => Token::Punctuator(Punctuator::Colon),
         ";" => Token::Punctuator(Punctuator::SemiColon),
         "..." => Token::Punctuator(Punctuator::Elipsis),
+
         "=" => Token::Punctuator(Punctuator::Equal),
         "*=" => Token::Punctuator(Punctuator::AsteriskEqual),
         "/=" => Token::Punctuator(Punctuator::SlashEqual),
@@ -197,6 +209,7 @@ fn match_token(token_str: &'static str) -> Token {
         "&=" => Token::Punctuator(Punctuator::AmpEqual),
         "^=" => Token::Punctuator(Punctuator::CaretEqual),
         "|=" => Token::Punctuator(Punctuator::PipeEqual),
+
         "," => Token::Punctuator(Punctuator::Comma),
         "#" => Token::Punctuator(Punctuator::Hash),
         "##" => Token::Punctuator(Punctuator::HashHash),
