@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 enum Keyword {
     Auto,
     Break,
@@ -88,7 +90,7 @@ enum Punctuator {
 
 enum Token {
     Keyword(Keyword),
-    Identifier,
+    Identifier(String),
     Constant,
     StringLiteral(String),
     Punctuator(Punctuator),
@@ -103,128 +105,184 @@ enum PreprocessingToken {
     Punctuator,
 }
 
-fn match_token(token_str: &'static str) -> Token {
+fn match_keyword(token_str: &str) -> Option<Keyword> {
     match token_str {
-        /*
-         * Keywords
-         */
         // Storage class specifiers
-        "auto" => Token::Keyword(Keyword::Auto),
-        "extern" => Token::Keyword(Keyword::Extern),
-        "register" => Token::Keyword(Keyword::Register),
-        "static" => Token::Keyword(Keyword::Static),
-        "typedef" => Token::Keyword(Keyword::Typedef),
+        "auto" => Some(Keyword::Auto),
+        "extern" => Some(Keyword::Extern),
+        "register" => Some(Keyword::Register),
+        "static" => Some(Keyword::Static),
+        "typedef" => Some(Keyword::Typedef),
 
         // Type qualifiers
-        "const" => Token::Keyword(Keyword::Const),
-        "restrict" => Token::Keyword(Keyword::Restrict),
-        "volatile" => Token::Keyword(Keyword::Volatile),
+        "const" => Some(Keyword::Const),
+        "restrict" => Some(Keyword::Restrict),
+        "volatile" => Some(Keyword::Volatile),
 
         // Control
-        "break" => Token::Keyword(Keyword::Break),
-        "case" => Token::Keyword(Keyword::Case),
-        "continue" => Token::Keyword(Keyword::Continue),
-        "default" => Token::Keyword(Keyword::Default),
-        "do" => Token::Keyword(Keyword::Do),
-        "else" => Token::Keyword(Keyword::Else),
-        "for" => Token::Keyword(Keyword::For),
-        "goto" => Token::Keyword(Keyword::Goto),
-        "if" => Token::Keyword(Keyword::If),
-        "return" => Token::Keyword(Keyword::Return),
-        "switch" => Token::Keyword(Keyword::Switch),
-        "while" => Token::Keyword(Keyword::While),
+        "break" => Some(Keyword::Break),
+        "case" => Some(Keyword::Case),
+        "continue" => Some(Keyword::Continue),
+        "default" => Some(Keyword::Default),
+        "do" => Some(Keyword::Do),
+        "else" => Some(Keyword::Else),
+        "for" => Some(Keyword::For),
+        "goto" => Some(Keyword::Goto),
+        "if" => Some(Keyword::If),
+        "return" => Some(Keyword::Return),
+        "switch" => Some(Keyword::Switch),
+        "while" => Some(Keyword::While),
 
         // Type specifiers
-        "char" => Token::Keyword(Keyword::Char),
-        "double" => Token::Keyword(Keyword::Double),
-        "float" => Token::Keyword(Keyword::Float),
-        "int" => Token::Keyword(Keyword::Int),
-        "long" => Token::Keyword(Keyword::Long),
-        "short" => Token::Keyword(Keyword::Short),
-        "signed" => Token::Keyword(Keyword::Signed),
-        "unsigned" => Token::Keyword(Keyword::Unsigned),
-        "void" => Token::Keyword(Keyword::Void),
+        "char" => Some(Keyword::Char),
+        "double" => Some(Keyword::Double),
+        "float" => Some(Keyword::Float),
+        "int" => Some(Keyword::Int),
+        "long" => Some(Keyword::Long),
+        "short" => Some(Keyword::Short),
+        "signed" => Some(Keyword::Signed),
+        "unsigned" => Some(Keyword::Unsigned),
+        "void" => Some(Keyword::Void),
 
         // Struct, union, enumeration
-        "enum" => Token::Keyword(Keyword::Enum),
-        "struct" => Token::Keyword(Keyword::Struct),
-        "union" => Token::Keyword(Keyword::Union),
+        "enum" => Some(Keyword::Enum),
+        "struct" => Some(Keyword::Struct),
+        "union" => Some(Keyword::Union),
 
         // Function specifiers
-        "inline" => Token::Keyword(Keyword::Inline),
+        "inline" => Some(Keyword::Inline),
 
         // sizeof
-        "sizeof" => Token::Keyword(Keyword::Sizeof),
+        "sizeof" => Some(Keyword::Sizeof),
 
-        /*
-         * Punctuators
-         */
-        "[" => Token::Punctuator(Punctuator::OpenSquare),
-        "]" => Token::Punctuator(Punctuator::CloseSquare),
-        "(" => Token::Punctuator(Punctuator::OpenParen),
-        ")" => Token::Punctuator(Punctuator::CloseParen),
-        "{" => Token::Punctuator(Punctuator::OpenBrace),
-        "}" => Token::Punctuator(Punctuator::CloseBrace),
-
-        "." => Token::Punctuator(Punctuator::Period),
-        "->" => Token::Punctuator(Punctuator::Arrow),
-        "++" => Token::Punctuator(Punctuator::PlusPlus),
-        "--" => Token::Punctuator(Punctuator::MinusMinus),
-
-        "&" => Token::Punctuator(Punctuator::Amp),
-        "*" => Token::Punctuator(Punctuator::Asterisk),
-        "+" => Token::Punctuator(Punctuator::Plus),
-        "-" => Token::Punctuator(Punctuator::Minus),
-        "~" => Token::Punctuator(Punctuator::Tilde),
-        "!" => Token::Punctuator(Punctuator::Exclamation),
-        "/" => Token::Punctuator(Punctuator::Slash),
-        "%" => Token::Punctuator(Punctuator::Percent),
-
-        "<<" => Token::Punctuator(Punctuator::LessLess),
-        ">>" => Token::Punctuator(Punctuator::GreaterGreater),
-        "<" => Token::Punctuator(Punctuator::Less),
-        ">" => Token::Punctuator(Punctuator::Greater),
-        "<=" => Token::Punctuator(Punctuator::LessEqual),
-        ">=" => Token::Punctuator(Punctuator::GreaterEqual),
-        "==" => Token::Punctuator(Punctuator::EqualEqual),
-        "!=" => Token::Punctuator(Punctuator::ExclamationEqual),
-
-        "^" => Token::Punctuator(Punctuator::Caret),
-        "|" => Token::Punctuator(Punctuator::Pipe),
-        "&&" => Token::Punctuator(Punctuator::AmpAmp),
-        "||" => Token::Punctuator(Punctuator::PipePipe),
-        "?" => Token::Punctuator(Punctuator::Question),
-        ":" => Token::Punctuator(Punctuator::Colon),
-        ";" => Token::Punctuator(Punctuator::SemiColon),
-        "..." => Token::Punctuator(Punctuator::Elipsis),
-
-        "=" => Token::Punctuator(Punctuator::Equal),
-        "*=" => Token::Punctuator(Punctuator::AsteriskEqual),
-        "/=" => Token::Punctuator(Punctuator::SlashEqual),
-        "%=" => Token::Punctuator(Punctuator::PercentEqual),
-        "+=" => Token::Punctuator(Punctuator::PlusEqual),
-        "-=" => Token::Punctuator(Punctuator::MinusEqual),
-        "<<=" => Token::Punctuator(Punctuator::LessLessEqual),
-        ">>=" => Token::Punctuator(Punctuator::GreaterGreaterEqual),
-        "&=" => Token::Punctuator(Punctuator::AmpEqual),
-        "^=" => Token::Punctuator(Punctuator::CaretEqual),
-        "|=" => Token::Punctuator(Punctuator::PipeEqual),
-
-        "," => Token::Punctuator(Punctuator::Comma),
-        "#" => Token::Punctuator(Punctuator::Hash),
-        "##" => Token::Punctuator(Punctuator::HashHash),
-
-        // Digraphs
-        "<:" => Token::Punctuator(Punctuator::OpenSquare),
-        ":>" => Token::Punctuator(Punctuator::CloseSquare),
-        "<%" => Token::Punctuator(Punctuator::OpenBrace),
-        "%>" => Token::Punctuator(Punctuator::CloseBrace),
-        "%:" => Token::Punctuator(Punctuator::Hash),
-        "%:%:" => Token::Punctuator(Punctuator::HashHash),
+        // Failed to match keyword
+        _ => None,
     }
 }
 
-fn lex(program_str: &'static str) -> Vec<Token> {
-    // FSM through characters of program
-    return vec![match_token("}")];
+fn match_punctuator(token_str: &'static str) -> Option<Punctuator> {
+    match token_str {
+        "[" => Some(Punctuator::OpenSquare),
+        "]" => Some(Punctuator::CloseSquare),
+        "(" => Some(Punctuator::OpenParen),
+        ")" => Some(Punctuator::CloseParen),
+        "{" => Some(Punctuator::OpenBrace),
+        "}" => Some(Punctuator::CloseBrace),
+
+        "." => Some(Punctuator::Period),
+        "->" => Some(Punctuator::Arrow),
+        "++" => Some(Punctuator::PlusPlus),
+        "--" => Some(Punctuator::MinusMinus),
+
+        "&" => Some(Punctuator::Amp),
+        "*" => Some(Punctuator::Asterisk),
+        "+" => Some(Punctuator::Plus),
+        "-" => Some(Punctuator::Minus),
+        "~" => Some(Punctuator::Tilde),
+        "!" => Some(Punctuator::Exclamation),
+        "/" => Some(Punctuator::Slash),
+        "%" => Some(Punctuator::Percent),
+
+        "<<" => Some(Punctuator::LessLess),
+        ">>" => Some(Punctuator::GreaterGreater),
+        "<" => Some(Punctuator::Less),
+        ">" => Some(Punctuator::Greater),
+        "<=" => Some(Punctuator::LessEqual),
+        ">=" => Some(Punctuator::GreaterEqual),
+        "==" => Some(Punctuator::EqualEqual),
+        "!=" => Some(Punctuator::ExclamationEqual),
+
+        "^" => Some(Punctuator::Caret),
+        "|" => Some(Punctuator::Pipe),
+        "&&" => Some(Punctuator::AmpAmp),
+        "||" => Some(Punctuator::PipePipe),
+        "?" => Some(Punctuator::Question),
+        ":" => Some(Punctuator::Colon),
+        ";" => Some(Punctuator::SemiColon),
+        "..." => Some(Punctuator::Elipsis),
+
+        "=" => Some(Punctuator::Equal),
+        "*=" => Some(Punctuator::AsteriskEqual),
+        "/=" => Some(Punctuator::SlashEqual),
+        "%=" => Some(Punctuator::PercentEqual),
+        "+=" => Some(Punctuator::PlusEqual),
+        "-=" => Some(Punctuator::MinusEqual),
+        "<<=" => Some(Punctuator::LessLessEqual),
+        ">>=" => Some(Punctuator::GreaterGreaterEqual),
+        "&=" => Some(Punctuator::AmpEqual),
+        "^=" => Some(Punctuator::CaretEqual),
+        "|=" => Some(Punctuator::PipeEqual),
+
+        "," => Some(Punctuator::Comma),
+        "#" => Some(Punctuator::Hash),
+        "##" => Some(Punctuator::HashHash),
+
+        // Digraphs
+        "<:" => Some(Punctuator::OpenSquare),
+        ":>" => Some(Punctuator::CloseSquare),
+        "<%" => Some(Punctuator::OpenBrace),
+        "%>" => Some(Punctuator::CloseBrace),
+        "%:" => Some(Punctuator::Hash),
+        "%:%:" => Some(Punctuator::HashHash),
+
+        // Failed to match punctuator
+        _ => None,
+    }
+}
+
+enum LexerState {
+    Start,
+    AccumulatingKeywordOrIdentifier,
+    AccumulatingPunctuator,
+    AccumulatingString,
+}
+
+struct Lexer {
+    accum: Vec<char>,
+    tokens: Vec<Token>,
+}
+
+impl Lexer {
+
+    fn new() -> Self {
+        Lexer {
+            accum: Vec::new(),
+            tokens: Vec::new(),
+        }
+    }
+
+    fn accumulate_keyword_or_identifier(&mut self, c: char) -> LexerState {
+        if c.is_ascii_alphanumeric() {
+            // Continue accumulating keyword or identifier
+            self.accum.push(c);
+            LexerState::AccumulatingKeywordOrIdentifier
+        } else {
+            // Finished accumulating
+            let token_str: String = self.accum.iter().collect();
+            match match_keyword(&token_str) {
+                Some(x) => self.tokens.push(Token::Keyword(x)),
+                None => self.tokens.push(Token::Identifier(token_str.to_string())),
+            };
+
+            self.accum.clear();
+
+            // What is the next token?
+            match c {
+                '[' | ']' | '(' | ')' | '{' | '}' |
+                '.' | '|' | ';' | ':' |
+                '-' | '+' | '=' | '*' | '/' |
+                '!' | '?' | '<' | '>' | '#' |
+                '&' | '|' | '^' | '%' => {
+                    self.accum.push(c);
+                    LexerState::AccumulatingPunctuator
+                },
+
+                '"' => LexerState::AccumulatingString,
+                _ => LexerState::Start  // todo handle all states
+            }
+        }
+    }
+}
+
+fn main() {
 }
