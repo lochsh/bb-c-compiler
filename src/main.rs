@@ -270,10 +270,10 @@ fn match_punctuator_str(token_str: &str) -> Option<Punctuator> {
 }
 
 enum LexerState {
-    Start,
+    NewToken,
     KeywordOrId,
     Punctuator,
-    String_,
+    StringLiteral,
 }
 
 struct Lexer {
@@ -292,10 +292,10 @@ impl Lexer {
 
     fn step(&mut self, state: LexerState, c: char) -> LexerState {
         match state {
-            LexerState::Start => self.new_token(c),
+            LexerState::NewToken => self.new_token(c),
             LexerState::KeywordOrId=> self.accumulate_keyword_or_identifier(c),
             LexerState::Punctuator=> self.accumulate_punctuator(c),
-            LexerState::String_ => self.accumulate_string(c),
+            LexerState::StringLiteral => self.accumulate_string(c),
         }
     }
 
@@ -311,10 +311,10 @@ impl Lexer {
         }
 
         if c == '"' {
-            return LexerState::String_;
+            return LexerState::StringLiteral;
         }
 
-        LexerState::Start
+        LexerState::NewToken
     }
 
     fn accumulate_keyword_or_identifier(&mut self, c: char) -> LexerState {
@@ -333,7 +333,7 @@ impl Lexer {
             None => self.tokens.push(Token::Identifier(token_str)),
         };
 
-        LexerState::Start
+        LexerState::NewToken
     }
 
     fn accumulate_punctuator(&mut self, c: char) -> LexerState {
@@ -346,7 +346,7 @@ impl Lexer {
             PunctuatorCharResult::CompleteToken(x) => {
                 self.accum.clear();
                 self.tokens.push(Token::Punctuator(x));
-                LexerState::Start
+                LexerState::NewToken
             },
 
             PunctuatorCharResult::NoMatch => {
@@ -364,8 +364,17 @@ impl Lexer {
     }
 
     fn accumulate_string(&mut self, c: char) -> LexerState {
-        // TODO impl
-        LexerState::String_
+        match c {
+            '"' => {
+                let token_str: String = self.accum.iter().collect();
+                self.tokens.push(Token::StringLiteral(token_str));
+                LexerState::NewToken
+            }
+            _ => {
+                self.accum.push(c);
+                LexerState::StringLiteral
+            },
+        }
     }
 }
 
