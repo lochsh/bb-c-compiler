@@ -37,6 +37,7 @@ enum Keyword {
     While,
 }
 
+#[derive(PartialEq)]
 enum Punctuator {
     OpenSquare,
     CloseSquare,
@@ -160,7 +161,34 @@ fn match_keyword(token_str: &str) -> Option<Keyword> {
     }
 }
 
-fn match_punctuator(token_str: &'static str) -> Option<Punctuator> {
+#[derive(PartialEq)]
+enum PunctuatorCharResult {
+    CompleteToken(Punctuator),
+    IncompleteToken,
+    NoMatch,
+}
+
+fn match_punctuator_char(token_char: &char) -> PunctuatorCharResult {
+    match token_char {
+        '[' => PunctuatorCharResult::CompleteToken(Punctuator::OpenSquare),
+        ']' => PunctuatorCharResult::CompleteToken(Punctuator::CloseSquare),
+        '(' => PunctuatorCharResult::CompleteToken(Punctuator::OpenParen),
+        ')' => PunctuatorCharResult::CompleteToken(Punctuator::CloseParen),
+        '{' => PunctuatorCharResult::CompleteToken(Punctuator::OpenBrace),
+        '}' => PunctuatorCharResult::CompleteToken(Punctuator::CloseBrace),
+        ';' => PunctuatorCharResult::CompleteToken(Punctuator::SemiColon),
+        ',' => PunctuatorCharResult::CompleteToken(Punctuator::Comma),
+
+        '.' | '|' | ':' | '!' |
+        '-' | '+' | '=' | '*' | '/' |
+        '!' | '?' | '<' | '>' | '#' |
+        '&' | '|' | '^' | '%' => PunctuatorCharResult::IncompleteToken,
+
+        _ => PunctuatorCharResult::NoMatch,
+    }
+}
+
+fn match_punctuator_str(token_str: &str) -> Option<Punctuator> {
     match token_str {
         "[" => Some(Punctuator::OpenSquare),
         "]" => Some(Punctuator::CloseSquare),
@@ -225,6 +253,17 @@ fn match_punctuator(token_str: &'static str) -> Option<Punctuator> {
         "%:" => Some(Punctuator::Hash),
         "%:%:" => Some(Punctuator::HashHash),
 
+        // Trigraphs
+        "??=" => Some(Punctuator::Hash),
+        "??/" => Some(Punctuator::Slash),
+        "??'" => Some(Punctuator::Caret),
+        "??(" => Some(Punctuator::OpenSquare),
+        "??)" => Some(Punctuator::CloseSquare),
+        "??!" => Some(Punctuator::Pipe),
+        "??<" => Some(Punctuator::OpenBrace),
+        "??>" => Some(Punctuator::CloseBrace),
+        "??-" => Some(Punctuator::Tilde),
+
         // Failed to match punctuator
         _ => None,
     }
@@ -232,9 +271,9 @@ fn match_punctuator(token_str: &'static str) -> Option<Punctuator> {
 
 enum LexerState {
     Start,
-    AccumulatingKeywordOrIdentifier,
-    AccumulatingPunctuator,
-    AccumulatingString,
+    KeywordOrId,
+    Punctuator,
+    String_,
 }
 
 struct Lexer {
@@ -251,36 +290,82 @@ impl Lexer {
         }
     }
 
-    fn accumulate_keyword_or_identifier(&mut self, c: char) -> LexerState {
+    fn step(&mut self, state: LexerState, c: char) -> LexerState {
+        match state {
+            LexerState::Start => self.new_token(c),
+            LexerState::KeywordOrId=> self.accumulate_keyword_or_identifier(c),
+            LexerState::Punctuator=> self.accumulate_punctuator(c),
+            LexerState::String_ => self.accumulate_string(c),
+        }
+    }
+
+    fn new_token(&mut self, c: char) -> LexerState {
+        self.accum.push(c);
+
         if c.is_ascii_alphanumeric() {
-            // Continue accumulating keyword or identifier
-            self.accum.push(c);
-            LexerState::AccumulatingKeywordOrIdentifier
-        } else {
-            // Finished accumulating
-            let token_str: String = self.accum.iter().collect();
-            match match_keyword(&token_str) {
-                Some(x) => self.tokens.push(Token::Keyword(x)),
-                None => self.tokens.push(Token::Identifier(token_str.to_string())),
-            };
+            return LexerState::KeywordOrId;
+        }
 
-            self.accum.clear();
+        if match_punctuator_char(&c) != PunctuatorCharResult::NoMatch {
+            return LexerState::Punctuator;
+        }
 
-            // What is the next token?
-            match c {
-                '[' | ']' | '(' | ')' | '{' | '}' |
-                '.' | '|' | ';' | ':' |
-                '-' | '+' | '=' | '*' | '/' |
-                '!' | '?' | '<' | '>' | '#' |
-                '&' | '|' | '^' | '%' => {
-                    self.accum.push(c);
-                    LexerState::AccumulatingPunctuator
-                },
+        if c == '"' {
+            return LexerState::String_;
+        }
 
-                '"' => LexerState::AccumulatingString,
-                _ => LexerState::Start  // todo handle all states
+        LexerState::Start
+    }
+
+    fn accumulate_keyword_or_identifier(&mut self, c: char) -> LexerState {
+        self.accum.push(c);
+
+        if c.is_ascii_alphanumeric() {
+            return LexerState::KeywordOrId
+        }
+
+        // Finished accumulating
+        let token_str: String = self.accum.iter().collect();
+        self.accum.clear();
+
+        match match_keyword(&token_str) {
+            Some(x) => self.tokens.push(Token::Keyword(x)),
+            None => self.tokens.push(Token::Identifier(token_str)),
+        };
+
+        LexerState::Start
+    }
+
+    fn accumulate_punctuator(&mut self, c: char) -> LexerState {
+        match match_punctuator_char(&c) {
+            PunctuatorCharResult::IncompleteToken => {
+                self.accum.push(c);
+                LexerState::Punctuator
+            },
+
+            PunctuatorCharResult::CompleteToken(x) => {
+                self.accum.clear();
+                self.tokens.push(Token::Punctuator(x));
+                LexerState::Start
+            },
+
+            PunctuatorCharResult::NoMatch => {
+                let token_str: String = self.accum.iter().collect();
+                self.accum.clear();
+
+                match match_punctuator_str(&token_str) {
+                    Some(x) => self.tokens.push(Token::Punctuator(x)),
+                    None => panic!("bad sequence"),
+                };
+
+                self.new_token(c)
             }
         }
+    }
+
+    fn accumulate_string(&mut self, c: char) -> LexerState {
+        // TODO impl
+        LexerState::String_
     }
 }
 
