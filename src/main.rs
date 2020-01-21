@@ -1,5 +1,9 @@
 #![allow(unused)]
 
+#[cfg(test)]
+use std::fs;
+
+#[derive(Debug, PartialEq)]
 enum Keyword {
     Auto,
     Break,
@@ -37,7 +41,7 @@ enum Keyword {
     While,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 enum Punctuator {
     OpenSquare,
     CloseSquare,
@@ -89,10 +93,11 @@ enum Punctuator {
     HashHash,
 }
 
+#[derive(Debug, PartialEq)]
 enum Token {
     Keyword(Keyword),
     Identifier(String),
-    Constant,
+    Constant(usize),  // TODO handle non-integer constants
     StringLiteral(String),
     Punctuator(Punctuator),
 }
@@ -355,7 +360,7 @@ impl Lexer {
 
                 match match_punctuator_str(&token_str) {
                     Some(x) => self.tokens.push(Token::Punctuator(x)),
-                    None => panic!("bad sequence"),
+                    None => panic!(format!("Bad sequence: {} is not a punctuator", token_str)),
                 };
 
                 self.new_token(c)
@@ -370,6 +375,7 @@ impl Lexer {
                 self.tokens.push(Token::StringLiteral(token_str));
                 LexerState::NewToken
             }
+
             _ => {
                 self.accum.push(c);
                 LexerState::StringLiteral
@@ -379,4 +385,29 @@ impl Lexer {
 }
 
 fn main() {
+}
+
+#[test]
+fn test_int_main_return_0() {
+    let program_str = fs::read_to_string("test/res/return0.c").unwrap();
+    let mut lexer = Lexer::new();
+    let mut state = LexerState::NewToken;
+
+    for c in program_str.chars() {
+        state = lexer.step(state, c);
+    }
+
+    let expected_tokens = vec![
+        Token::Keyword(Keyword::Int),
+        Token::Identifier("main".to_string()),
+        Token::Punctuator(Punctuator::OpenParen),
+        Token::Keyword(Keyword::Void),
+        Token::Punctuator(Punctuator::CloseParen),
+        Token::Punctuator(Punctuator::OpenBrace),
+        Token::Keyword(Keyword::Return),
+        Token::Constant(0),
+        Token::Punctuator(Punctuator::SemiColon),
+        Token::Punctuator(Punctuator::CloseBrace)];
+
+    assert_eq!(&expected_tokens[..], &lexer.tokens[..]);
 }
