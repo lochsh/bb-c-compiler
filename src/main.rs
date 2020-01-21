@@ -279,6 +279,7 @@ enum LexerState {
     KeywordOrId,
     Punctuator,
     StringLiteral,
+    Constant,
 }
 
 struct Lexer {
@@ -301,14 +302,23 @@ impl Lexer {
             LexerState::KeywordOrId=> self.accumulate_keyword_or_identifier(c),
             LexerState::Punctuator=> self.accumulate_punctuator(c),
             LexerState::StringLiteral => self.accumulate_string(c),
+            LexerState::Constant => self.accumulate_constant(c),
         }
     }
 
     fn new_token(&mut self, c: char) -> LexerState {
+        if c.is_ascii_whitespace() {
+            return LexerState::NewToken;
+        }
+
         self.accum.push(c);
 
-        if c.is_ascii_alphanumeric() {
+        if c.is_ascii_alphabetic() {
             return LexerState::KeywordOrId;
+        }
+
+        if c.is_ascii_digit() {
+            return LexerState::Constant;
         }
 
         if match_punctuator_char(&c) != PunctuatorCharResult::NoMatch {
@@ -319,13 +329,12 @@ impl Lexer {
             return LexerState::StringLiteral;
         }
 
-        LexerState::NewToken
+        panic!(format!("State transition not implemented, character: {}", c));
     }
 
     fn accumulate_keyword_or_identifier(&mut self, c: char) -> LexerState {
-        self.accum.push(c);
-
         if c.is_ascii_alphanumeric() {
+            self.accum.push(c);
             return LexerState::KeywordOrId
         }
 
@@ -338,7 +347,7 @@ impl Lexer {
             None => self.tokens.push(Token::Identifier(token_str)),
         };
 
-        LexerState::NewToken
+        self.new_token(c)
     }
 
     fn accumulate_punctuator(&mut self, c: char) -> LexerState {
@@ -372,6 +381,8 @@ impl Lexer {
         match c {
             '"' => {
                 let token_str: String = self.accum.iter().collect();
+                self.accum.clear();
+
                 self.tokens.push(Token::StringLiteral(token_str));
                 LexerState::NewToken
             }
@@ -380,6 +391,20 @@ impl Lexer {
                 self.accum.push(c);
                 LexerState::StringLiteral
             },
+        }
+    }
+
+    fn accumulate_constant(&mut self, c: char) -> LexerState {
+        if c.is_ascii_digit() {
+            LexerState::Constant
+        } else {
+            // TODO deal with error instead of unwrapping?
+            // TODO deal with non integer constants
+            let token_str: String = self.accum.iter().collect();
+            self.accum.clear();
+
+            self.tokens.push(Token::Constant(token_str.parse::<usize>().unwrap()));
+            self.new_token(c)
         }
     }
 }
