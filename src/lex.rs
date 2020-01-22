@@ -409,9 +409,6 @@ impl Lexer {
     }
 }
 
-fn main() {
-}
-
 #[test]
 fn test_int_main_return_0() {
     let program_str = fs::read_to_string("test/res/return0.c").unwrap();
