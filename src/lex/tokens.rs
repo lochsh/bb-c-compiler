@@ -2,7 +2,7 @@
 pub enum Token {
     Keyword(Keyword),
     Identifier(String),
-    Constant(usize), // TODO handle non-integer constants
+    Constant(Constant),
     StringLiteral(String),
     Punctuator(Punctuator),
 }
@@ -260,4 +260,16 @@ impl Punctuator {
             _ => PunctuatorCharResult::NoMatch,
         }
     }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Constant {
+    Int(i32),
+    Unsigned(u32),
+    Long(i64),
+    UnsignedLong(u64),
+    Float(f32),
+    Double(f64),
+    Size(usize),
+    Char(char),
 }

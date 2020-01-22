@@ -1,6 +1,6 @@
 #![allow(unused)]
 mod tokens;
-use tokens::{Keyword, Punctuator, PunctuatorCharResult, Token};
+use tokens::{Constant, Keyword, Punctuator, PunctuatorCharResult, Token};
 
 #[cfg(test)]
 use std::fs;
@@ -135,9 +135,11 @@ impl Lexer {
         } else {
             // TODO deal with error instead of unwrapping?
             // TODO deal with non integer constants
+            // TODO deal with hex and octal
             let token_str = self.accumulate_token_str();
-            self.tokens
-                .push(Token::Constant(token_str.parse::<usize>().unwrap()));
+            self.tokens.push(Token::Constant(Constant::Int(
+                token_str.parse::<i32>().unwrap(),
+            )));
             self.new_token(c)
         }
     }
@@ -161,7 +163,7 @@ fn test_int_main_return_0() {
         Token::Punctuator(Punctuator::CloseParen),
         Token::Punctuator(Punctuator::OpenBrace),
         Token::Keyword(Keyword::Return),
-        Token::Constant(0),
+        Token::Constant(Constant::Int(0)),
         Token::Punctuator(Punctuator::SemiColon),
         Token::Punctuator(Punctuator::CloseBrace),
     ];
