@@ -102,15 +102,6 @@ enum Token {
     Punctuator(Punctuator),
 }
 
-enum PreprocessingToken {
-    HeaderName,
-    Identifier,
-    PpNumber,
-    CharacterConstant,
-    StringLiteral,
-    Punctuator,
-}
-
 impl Keyword {
     fn from_string(token_str: &str) -> Option<Keyword> {
         match token_str {
