@@ -1,1 +1,1 @@
-mod lex;
+pub mod lex;
