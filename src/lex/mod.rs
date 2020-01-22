@@ -1,7 +1,7 @@
 #![allow(unused)]
 mod tokens;
-use tokens::PunctuatorCharResult;
 pub use tokens::{Constant, Keyword, Punctuator, Token};
+use tokens::{PunctuatorCharResult};
 
 pub enum LexerState {
     NewToken,
@@ -52,25 +52,19 @@ impl Lexer {
         self.accum.push(c);
 
         if c.is_ascii_alphabetic() {
-            return LexerState::KeywordOrId;
+            LexerState::KeywordOrId
+        } else if c.is_ascii_digit() {
+            LexerState::Constant
+        } else if Punctuator::from_char(&c) != PunctuatorCharResult::NoMatch {
+            LexerState::Punctuator
+        } else if c == '"' {
+            LexerState::StringLiteral
+        } else {
+            panic!(format!(
+                "State transition not implemented, character: {}",
+                c
+            ));
         }
-
-        if c.is_ascii_digit() {
-            return LexerState::Constant;
-        }
-
-        if Punctuator::from_char(&c) != PunctuatorCharResult::NoMatch {
-            return LexerState::Punctuator;
-        }
-
-        if c == '"' {
-            return LexerState::StringLiteral;
-        }
-
-        panic!(format!(
-            "State transition not implemented, character: {}",
-            c
-        ));
     }
 
     fn accumulate_keyword_or_identifier(&mut self, c: char) -> LexerState {
