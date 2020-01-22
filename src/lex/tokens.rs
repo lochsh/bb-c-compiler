@@ -2,7 +2,7 @@
 pub enum Token {
     Keyword(Keyword),
     Identifier(String),
-    Constant(usize),  // TODO handle non-integer constants
+    Constant(usize), // TODO handle non-integer constants
     StringLiteral(String),
     Punctuator(Punctuator),
 }
@@ -162,7 +162,6 @@ pub enum PunctuatorCharResult {
 }
 
 impl Punctuator {
-
     pub fn from_string(token_str: &str) -> Option<Punctuator> {
         match token_str {
             "[" => Some(Punctuator::OpenSquare),
@@ -255,13 +254,10 @@ impl Punctuator {
             ';' => PunctuatorCharResult::CompleteToken(Punctuator::SemiColon),
             ',' => PunctuatorCharResult::CompleteToken(Punctuator::Comma),
 
-            '.' | '|' | ':' | '!' |
-            '-' | '+' | '=' | '*' | '/' |
-            '!' | '?' | '<' | '>' | '#' |
-            '&' | '|' | '^' | '%' => PunctuatorCharResult::IncompleteToken,
+            '.' | '|' | ':' | '!' | '-' | '+' | '=' | '*' | '/' | '!' | '?' | '<' | '>' | '#'
+            | '&' | '|' | '^' | '%' => PunctuatorCharResult::IncompleteToken,
 
             _ => PunctuatorCharResult::NoMatch,
         }
     }
 }
-

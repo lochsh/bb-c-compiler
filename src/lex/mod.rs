@@ -1,6 +1,6 @@
 #![allow(unused)]
 mod tokens;
-use tokens::{Token, Keyword, Punctuator, PunctuatorCharResult};
+use tokens::{Keyword, Punctuator, PunctuatorCharResult, Token};
 
 #[cfg(test)]
 use std::fs;
@@ -19,7 +19,6 @@ struct Lexer {
 }
 
 impl Lexer {
-
     fn new() -> Self {
         Lexer {
             accum: Vec::new(),
@@ -30,8 +29,8 @@ impl Lexer {
     fn step(&mut self, state: LexerState, c: char) -> LexerState {
         match state {
             LexerState::NewToken => self.new_token(c),
-            LexerState::KeywordOrId=> self.accumulate_keyword_or_identifier(c),
-            LexerState::Punctuator=> self.accumulate_punctuator(c),
+            LexerState::KeywordOrId => self.accumulate_keyword_or_identifier(c),
+            LexerState::Punctuator => self.accumulate_punctuator(c),
             LexerState::StringLiteral => self.accumulate_string(c),
             LexerState::Constant => self.accumulate_constant(c),
         }
@@ -66,13 +65,16 @@ impl Lexer {
             return LexerState::StringLiteral;
         }
 
-        panic!(format!("State transition not implemented, character: {}", c));
+        panic!(format!(
+            "State transition not implemented, character: {}",
+            c
+        ));
     }
 
     fn accumulate_keyword_or_identifier(&mut self, c: char) -> LexerState {
         if c.is_ascii_alphanumeric() {
             self.accum.push(c);
-            return LexerState::KeywordOrId
+            return LexerState::KeywordOrId;
         }
 
         // Finished accumulating
@@ -91,13 +93,13 @@ impl Lexer {
             PunctuatorCharResult::IncompleteToken => {
                 self.accum.push(c);
                 LexerState::Punctuator
-            },
+            }
 
             PunctuatorCharResult::CompleteToken(x) => {
                 self.accum.clear();
                 self.tokens.push(Token::Punctuator(x));
                 LexerState::NewToken
-            },
+            }
 
             PunctuatorCharResult::NoMatch => {
                 let token_str = self.accumulate_token_str();
@@ -123,7 +125,7 @@ impl Lexer {
             _ => {
                 self.accum.push(c);
                 LexerState::StringLiteral
-            },
+            }
         }
     }
 
@@ -134,7 +136,8 @@ impl Lexer {
             // TODO deal with error instead of unwrapping?
             // TODO deal with non integer constants
             let token_str = self.accumulate_token_str();
-            self.tokens.push(Token::Constant(token_str.parse::<usize>().unwrap()));
+            self.tokens
+                .push(Token::Constant(token_str.parse::<usize>().unwrap()));
             self.new_token(c)
         }
     }
@@ -160,7 +163,8 @@ fn test_int_main_return_0() {
         Token::Keyword(Keyword::Return),
         Token::Constant(0),
         Token::Punctuator(Punctuator::SemiColon),
-        Token::Punctuator(Punctuator::CloseBrace)];
+        Token::Punctuator(Punctuator::CloseBrace),
+    ];
 
     assert_eq!(&expected_tokens[..], &lexer.tokens[..]);
 }
