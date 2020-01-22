@@ -1,11 +1,9 @@
 #![allow(unused)]
 mod tokens;
-use tokens::{Constant, Keyword, Punctuator, PunctuatorCharResult, Token};
+use tokens::PunctuatorCharResult;
+pub use tokens::{Constant, Keyword, Punctuator, Token};
 
-#[cfg(test)]
-use std::fs;
-
-enum LexerState {
+pub enum LexerState {
     NewToken,
     KeywordOrId,
     Punctuator,
@@ -13,20 +11,24 @@ enum LexerState {
     Constant,
 }
 
-struct Lexer {
+pub struct Lexer {
     accum: Vec<char>,
     tokens: Vec<Token>,
 }
 
 impl Lexer {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Lexer {
             accum: Vec::new(),
             tokens: Vec::new(),
         }
     }
 
-    fn step(&mut self, state: LexerState, c: char) -> LexerState {
+    pub fn tokens(&self) -> &Vec<Token> {
+        &self.tokens
+    }
+
+    pub fn step(&mut self, state: LexerState, c: char) -> LexerState {
         match state {
             LexerState::NewToken => self.new_token(c),
             LexerState::KeywordOrId => self.accumulate_keyword_or_identifier(c),
@@ -143,30 +145,4 @@ impl Lexer {
             self.new_token(c)
         }
     }
-}
-
-#[test]
-fn test_int_main_return_0() {
-    let program_str = fs::read_to_string("test/res/return0.c").unwrap();
-    let mut lexer = Lexer::new();
-    let mut state = LexerState::NewToken;
-
-    for c in program_str.chars() {
-        state = lexer.step(state, c);
-    }
-
-    let expected_tokens = vec![
-        Token::Keyword(Keyword::Int),
-        Token::Identifier("main".to_string()),
-        Token::Punctuator(Punctuator::OpenParen),
-        Token::Keyword(Keyword::Void),
-        Token::Punctuator(Punctuator::CloseParen),
-        Token::Punctuator(Punctuator::OpenBrace),
-        Token::Keyword(Keyword::Return),
-        Token::Constant(Constant::Int(0)),
-        Token::Punctuator(Punctuator::SemiColon),
-        Token::Punctuator(Punctuator::CloseBrace),
-    ];
-
-    assert_eq!(&expected_tokens[..], &lexer.tokens[..]);
 }
