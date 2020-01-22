@@ -1,7 +1,7 @@
 #![allow(unused)]
 mod tokens;
+use tokens::PunctuatorCharResult;
 pub use tokens::{Constant, Keyword, Punctuator, Token};
-use tokens::{PunctuatorCharResult};
 
 pub enum LexerState {
     NewToken,
