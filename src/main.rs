@@ -306,6 +306,12 @@ impl Lexer {
         }
     }
 
+    fn finished_accumulating(&mut self) -> String {
+        let token_str: String = self.accum.iter().collect();
+        self.accum.clear();
+        token_str
+    }
+
     fn new_token(&mut self, c: char) -> LexerState {
         if c.is_ascii_whitespace() {
             return LexerState::NewToken;
@@ -339,8 +345,7 @@ impl Lexer {
         }
 
         // Finished accumulating
-        let token_str: String = self.accum.iter().collect();
-        self.accum.clear();
+        let token_str = self.finished_accumulating();
 
         match match_keyword(&token_str) {
             Some(x) => self.tokens.push(Token::Keyword(x)),
@@ -364,8 +369,7 @@ impl Lexer {
             },
 
             PunctuatorCharResult::NoMatch => {
-                let token_str: String = self.accum.iter().collect();
-                self.accum.clear();
+                let token_str = self.finished_accumulating();
 
                 match match_punctuator_str(&token_str) {
                     Some(x) => self.tokens.push(Token::Punctuator(x)),
@@ -380,9 +384,7 @@ impl Lexer {
     fn accumulate_string(&mut self, c: char) -> LexerState {
         match c {
             '"' => {
-                let token_str: String = self.accum.iter().collect();
-                self.accum.clear();
-
+                let token_str = self.finished_accumulating();
                 self.tokens.push(Token::StringLiteral(token_str));
                 LexerState::NewToken
             }
@@ -400,9 +402,7 @@ impl Lexer {
         } else {
             // TODO deal with error instead of unwrapping?
             // TODO deal with non integer constants
-            let token_str: String = self.accum.iter().collect();
-            self.accum.clear();
-
+            let token_str = self.finished_accumulating();
             self.tokens.push(Token::Constant(token_str.parse::<usize>().unwrap()));
             self.new_token(c)
         }
