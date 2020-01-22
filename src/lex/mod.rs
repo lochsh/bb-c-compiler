@@ -60,10 +60,7 @@ impl Lexer {
         } else if c == '"' {
             LexerState::StringLiteral
         } else {
-            panic!(format!(
-                "State transition not implemented, character: {}",
-                c
-            ));
+            panic!(format!("State transition not implemented, character: {}", c));
         }
     }
 
