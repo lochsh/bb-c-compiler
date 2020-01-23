@@ -70,7 +70,6 @@ impl Lexer {
             return Ok(LexerState::KeywordOrId);
         }
 
-        // Finished accumulating
         let token_str = self.accumulate_token_str();
 
         match Keyword::from_string(&token_str) {
@@ -126,7 +125,6 @@ impl Lexer {
         if c.is_ascii_digit() {
             Ok(LexerState::Constant)
         } else {
-            // TODO deal with error instead of unwrapping?
             // TODO deal with non integer constants
             // TODO deal with hex and octal
             let token_str = self.accumulate_token_str();
