@@ -28,7 +28,7 @@ impl Lexer {
         &self.tokens
     }
 
-    pub fn step(&mut self, state: LexerState, c: char) -> LexerState {
+    pub fn step(&mut self, state: LexerState, c: char) -> Result<LexerState, String> {
         match state {
             LexerState::NewToken => self.new_token(c),
             LexerState::KeywordOrId => self.accumulate_keyword_or_identifier(c),
@@ -44,30 +44,30 @@ impl Lexer {
         token_str
     }
 
-    fn new_token(&mut self, c: char) -> LexerState {
+    fn new_token(&mut self, c: char) -> Result<LexerState, String> {
         if c.is_ascii_whitespace() {
-            return LexerState::NewToken;
+            return Ok(LexerState::NewToken);
         }
 
         self.accum.push(c);
 
         if c.is_ascii_alphabetic() {
-            LexerState::KeywordOrId
+            Ok(LexerState::KeywordOrId)
         } else if c.is_ascii_digit() {
-            LexerState::Constant
+            Ok(LexerState::Constant)
         } else if Punctuator::from_char(&c) != PunctuatorCharResult::NoMatch {
-            LexerState::Punctuator
+            Ok(LexerState::Punctuator)
         } else if c == '"' {
-            LexerState::StringLiteral
+            Ok(LexerState::StringLiteral)
         } else {
-            panic!(format!("State transition not implemented, character: {}", c));
+            Err(format!("State transition not implemented, character: {}", c))
         }
     }
 
-    fn accumulate_keyword_or_identifier(&mut self, c: char) -> LexerState {
+    fn accumulate_keyword_or_identifier(&mut self, c: char) -> Result<LexerState, String> {
         if c.is_ascii_alphanumeric() {
             self.accum.push(c);
-            return LexerState::KeywordOrId;
+            return Ok(LexerState::KeywordOrId);
         }
 
         // Finished accumulating
@@ -81,17 +81,17 @@ impl Lexer {
         self.new_token(c)
     }
 
-    fn accumulate_punctuator(&mut self, c: char) -> LexerState {
+    fn accumulate_punctuator(&mut self, c: char) -> Result<LexerState, String> {
         match Punctuator::from_char(&c) {
             PunctuatorCharResult::IncompleteToken => {
                 self.accum.push(c);
-                LexerState::Punctuator
+                Ok(LexerState::Punctuator)
             }
 
             PunctuatorCharResult::CompleteToken(x) => {
                 self.accum.clear();
                 self.tokens.push(Token::Punctuator(x));
-                LexerState::NewToken
+                Ok(LexerState::NewToken)
             }
 
             PunctuatorCharResult::NoMatch => {
@@ -107,33 +107,37 @@ impl Lexer {
         }
     }
 
-    fn accumulate_string(&mut self, c: char) -> LexerState {
+    fn accumulate_string(&mut self, c: char) -> Result<LexerState, String> {
         match c {
             '"' => {
                 let token_str = self.accumulate_token_str();
                 self.tokens.push(Token::StringLiteral(token_str));
-                LexerState::NewToken
+                Ok(LexerState::NewToken)
             }
 
             _ => {
                 self.accum.push(c);
-                LexerState::StringLiteral
+                Ok(LexerState::StringLiteral)
             }
         }
     }
 
-    fn accumulate_constant(&mut self, c: char) -> LexerState {
+    fn accumulate_constant(&mut self, c: char) -> Result<LexerState, String> {
         if c.is_ascii_digit() {
-            LexerState::Constant
+            Ok(LexerState::Constant)
         } else {
             // TODO deal with error instead of unwrapping?
             // TODO deal with non integer constants
             // TODO deal with hex and octal
             let token_str = self.accumulate_token_str();
-            self.tokens.push(Token::Constant(Constant::Int(
-                token_str.parse::<i32>().unwrap(),
-            )));
-            self.new_token(c)
+            match token_str.parse::<i32>() {
+                Ok(x) => {
+                    self.tokens.push(Token::Constant(Constant::Int(x)));
+                    self.new_token(c)
+                }
+
+                Err(s) => Err(format!("Unable to parse constant: {}", s)),
+            }
         }
     }
 }

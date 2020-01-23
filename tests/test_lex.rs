@@ -8,7 +8,10 @@ fn test_int_main_return_0() {
     let mut state = LexerState::NewToken;
 
     for c in program_str.chars() {
-        state = lexer.step(state, c);
+        match lexer.step(state, c) {
+            Ok(x) => state = x,
+            Err(s) => panic!(s),
+        }
     }
 
     let expected_tokens = vec![
