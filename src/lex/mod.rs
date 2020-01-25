@@ -97,11 +97,12 @@ impl Lexer {
                 let token_str = self.accumulate_token_str();
 
                 match Punctuator::from_string(&token_str) {
-                    Some(x) => self.tokens.push(Token::Punctuator(x)),
-                    None => panic!(format!("Bad sequence: {} is not a punctuator", token_str)),
-                };
-
-                self.new_token(c)
+                    Some(x) => {
+                        self.tokens.push(Token::Punctuator(x));
+                        self.new_token(c)
+                    }
+                    None => Err(format!("Bad sequence: {} is not a punctuator", token_str)),
+                }
             }
         }
     }
