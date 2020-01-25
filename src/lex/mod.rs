@@ -60,7 +60,7 @@ impl Lexer {
         } else if c == '"' {
             Ok(LexerState::StringLiteral)
         } else {
-            Err(format!("State transition not implemented, character: {}", c))
+            Err(format!("Unexpected character: {}", c))
         }
     }
 
