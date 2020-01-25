@@ -85,7 +85,7 @@ impl Keyword {
             "unsigned" => Some(Keyword::Unsigned),
             "void" => Some(Keyword::Void),
 
-            // Struct, union, pub enumeration
+            // Struct, union, enumeration
             "enum" => Some(Keyword::Enum),
             "struct" => Some(Keyword::Struct),
             "union" => Some(Keyword::Union),
@@ -255,7 +255,7 @@ impl Punctuator {
             ',' => PunctuatorCharResult::CompleteToken(Punctuator::Comma),
 
             '.' | '|' | ':' | '!' | '-' | '+' | '=' | '*' | '/' | '!' | '?' | '<' | '>' | '#'
-            | '&' | '|' | '^' | '%' => PunctuatorCharResult::IncompleteToken,
+            | '&' | '^' | '%' => PunctuatorCharResult::IncompleteToken,
 
             _ => PunctuatorCharResult::NoMatch,
         }
